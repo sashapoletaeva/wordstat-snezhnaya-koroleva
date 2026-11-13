@@ -65,14 +65,28 @@ async function start() {
   el('mode').onchange = monthly
   el('filters').onchange = monthly
   monthly()
-  el('rows').innerHTML = series.map(s => {
-    const a = selectYear(s.monthly,prior), b = selectYear(s.monthly,year)
-    const common = monthKeys.filter(key=>a[key]!=null && b[key]!=null)
-    const total = values => common.reduce((sum,key)=>sum+values[key],0)
-    const before = total(a), after = total(b)
-    const change = before ? new Intl.NumberFormat('ru',{style:'percent',signDisplay:'exceptZero',maximumFractionDigits:1}).format(after/before-1) : '—'
-    return `<tr><th scope="row">${escape(s.phrase)}</th><td>${common.length?fmt.format(before):'—'}</td><td>${common.length?fmt.format(after):'—'}</td><td>${change}</td></tr>`
-  }).join('')
+  const monthPicker = el('compareMonths')
+  const available = monthKeys.filter(key => series.some(s =>
+    selectYear(s.monthly, prior)[key] != null && selectYear(s.monthly, year)[key] != null
+  ))
+  const fullMonths = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
+  monthPicker.insertAdjacentHTML('beforeend', available.map(key =>
+    `<label><input type="checkbox" value="${key}" checked>${fullMonths[Number(key)-1]}</label>`
+  ).join(''))
+  function compareMonths() {
+    const selected = Array.from(monthPicker.querySelectorAll('input:checked'), input => input.value)
+    el('compareCaption').textContent = selected.length ? 'Число запросов за выбранные месяцы' : 'Выберите хотя бы один месяц'
+    el('rows').innerHTML = series.map(s => {
+      const a = selectYear(s.monthly,prior), b = selectYear(s.monthly,year)
+      const common = selected.filter(key=>a[key]!=null && b[key]!=null)
+      const total = values => common.reduce((sum,key)=>sum+values[key],0)
+      const before = total(a), after = total(b)
+      const change = before ? new Intl.NumberFormat('ru',{style:'percent',signDisplay:'exceptZero',maximumFractionDigits:1}).format(after/before-1) : '—'
+      return `<tr><th scope="row">${escape(s.phrase)}</th><td>${common.length?fmt.format(before):'—'}</td><td>${common.length?fmt.format(after):'—'}</td><td>${change}</td></tr>`
+    }).join('')
+  }
+  monthPicker.onchange = compareMonths
+  compareMonths()
   el('dailyPhrase').innerHTML = series.map((s,i)=>`<option value="${i}">${escape(s.phrase)}</option>`).join('')
   function daily(reset) {
     const i = Number(el('dailyPhrase').value)
