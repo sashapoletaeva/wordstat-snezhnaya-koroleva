@@ -36,7 +36,7 @@ for phrase in phrases:
     previous = next((s for s in old.get("series", []) if s["phrase"] == phrase), {})
     daily = previous.get("daily", {})
     try:
-        daily.update(fetch(phrase, "DAILY", today - dt.timedelta(days=30), today - dt.timedelta(days=1)))
+        daily.update(fetch(phrase, "DAILY", today - dt.timedelta(days=59), today - dt.timedelta(days=1)))
     except urllib.error.HTTPError as error:
         print(f"Daily request for {phrase}: HTTP {error.code}. Preserving saved dates.")
     data["series"].append(dict(phrase=phrase, monthly=monthly, daily=daily))
