@@ -70,12 +70,24 @@ async function start() {
     selectYear(s.monthly, prior)[key] != null && selectYear(s.monthly, year)[key] != null
   ))
   const fullMonths = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
-  monthPicker.insertAdjacentHTML('beforeend', available.map(key =>
-    `<label><input type="checkbox" value="${key}" checked>${fullMonths[Number(key)-1]}</label>`
-  ).join(''))
-  function compareMonths() {
-    const selected = Array.from(monthPicker.querySelectorAll('input:checked'), input => input.value)
-    el('compareCaption').textContent = selected.length ? 'Число запросов за выбранные месяцы' : 'Выберите хотя бы один месяц'
+  const options = available.map(key =>
+    `<option value="${key}">${fullMonths[Number(key)-1]}</option>`
+  ).join('')
+  monthPicker.insertAdjacentHTML('beforeend',
+    `<label>С <select id="compareStart" aria-label="Начальный месяц">${options}</select></label>
+     <label>По <select id="compareEnd" aria-label="Конечный месяц">${options}</select></label>`
+  )
+  const compareStart = el('compareStart')
+  const compareEnd = el('compareEnd')
+  compareEnd.value = available.at(-1) ?? ''
+  compareStart.disabled = compareEnd.disabled = !available.length
+  function compareMonths(event) {
+    if (compareStart.value > compareEnd.value) {
+      if (event?.target === compareEnd) compareStart.value = compareEnd.value
+      else compareEnd.value = compareStart.value
+    }
+    const selected = available.filter(key => key >= compareStart.value && key <= compareEnd.value)
+    el('compareCaption').textContent = selected.length ? 'Число запросов за выбранные месяцы' : 'Нет сопоставимых месяцев'
     el('rows').innerHTML = series.map(s => {
       const a = selectYear(s.monthly,prior), b = selectYear(s.monthly,year)
       const common = selected.filter(key=>a[key]!=null && b[key]!=null)
