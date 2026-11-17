@@ -39,7 +39,7 @@ function plot(id, keys, lines, label, selected) {
 async function start() {
   const response = await fetch('data.json', {cache:'no-cache'})
   if (!response.ok) return
-  const {series, updated} = await response.json()
+  const {series, updated, daily_match} = await response.json()
   const dates = [...new Set(series.flatMap(s => Object.keys(s.monthly)))].sort()
   const last = dates.at(-1)
   const year = Number(last.slice(0,4))
@@ -62,6 +62,8 @@ async function start() {
     })
     plot('graph', yoy?monthKeys:dates, lines, key=>yoy?months[+key-1]:months[+key.slice(5,7)-1]+' '+key.slice(2,4))
   }
+  el('monthlyMatch').textContent = 'Без кавычек. Включены запросы с дополнительными словами.'
+  el('dailyMatch').textContent = daily_match === 'quoted' ? 'Фразы в кавычках. Без дополнительных слов.' : 'Без кавычек. Включены запросы с дополнительными словами.'
   el('mode').onchange = monthly
   el('filters').onchange = monthly
   monthly()

@@ -28,15 +28,15 @@ def fetch(phrase, period, start, end):
 
 path = Path("data.json")
 old = json.loads(path.read_text()) if path.exists() else {}
-data = {"updated": dt.datetime.now(dt.timezone.utc).isoformat(), "series": []}
+data = {"updated": dt.datetime.now(dt.timezone.utc).isoformat(), "series": [], "daily_match": "quoted"}
 for phrase in phrases:
     monthly = fetch(phrase, "MONTHLY", dt.date(2025, 1, 1), last_month)
     if not monthly:
         raise SystemExit(f"No monthly data returned for {phrase}.")
     previous = next((s for s in old.get("series", []) if s["phrase"] == phrase), {})
-    daily = previous.get("daily", {})
+    daily = previous.get("daily", {}) if old.get("daily_match") == "quoted" else {}
     try:
-        daily.update(fetch(phrase, "DAILY", today - dt.timedelta(days=59), today - dt.timedelta(days=1)))
+        daily.update(fetch(f'"{phrase}"', "DAILY", today - dt.timedelta(days=59), today - dt.timedelta(days=1)))
     except urllib.error.HTTPError as error:
         print(f"Daily request for {phrase}: HTTP {error.code}. Preserving saved dates.")
     data["series"].append(dict(phrase=phrase, monthly=monthly, daily=daily))
