@@ -24,7 +24,7 @@ def fetch(phrase, period, start, end):
     )
     with urllib.request.urlopen(request, timeout=45) as response:
         return {row["date"][:10]: int(row["count"])
-                for row in json.load(response).get("results", [])}
+                for row in json.load(response).get("results", []) if "count" in row}
 
 path = Path("data.json")
 old = json.loads(path.read_text()) if path.exists() else {}
